@@ -1,9 +1,9 @@
-import {IosysCollector,Kaitori1ChomeCollector,MorimoriCollector} from "./collectors/index.js";import type {BuybackCollector} from "./types.js";import {ResearchApiClient} from "./shared/research-api-client.js";import {runCollectors} from "./runner.js";
+import {IosysCollector,Kaitori1ChomeCollector,MorimoriCollector} from "./collectors/index.js";import type {BuybackCollector} from "./types.js";import {ResearchApiClient} from "./shared/research-api-client.js";import {runCollectors} from "./runner.js";import {POLICIES} from "./policy.js";
 const collectors:BuybackCollector[]=[];
-if(process.env.ENABLE_IOSYS==="true")throw new Error("iosys cannot be enabled until the documented compliance requirement is resolved");
-if(process.env.ENABLE_KAITORI_1CHOME==="true"&&process.env.KAITORI_1CHOME_URL)collectors.push(new Kaitori1ChomeCollector(process.env.KAITORI_1CHOME_URL));
-if(process.env.ENABLE_MORIMORI==="true"&&process.env.MORIMORI_URL)collectors.push(new MorimoriCollector(process.env.MORIMORI_URL));
-// The implementation is registered and fixture-tested, but intentionally not instantiated yet.
-void IosysCollector;
+const pages=(name:string)=>Math.max(1,Math.min(10,Number.parseInt(process.env[name]??"1",10)||1));
+if(process.env.ENABLE_KAITORI_1CHOME==="true")collectors.push(new Kaitori1ChomeCollector(process.env.KAITORI_1CHOME_URL||"https://www.1-chome.com/",process.env.KAITORI_1CHOME_QUERY||"iPhone",pages("KAITORI_1CHOME_MAX_PAGES")));
+if(process.env.ENABLE_MORIMORI==="true")collectors.push(new MorimoriCollector(process.env.MORIMORI_URL||"https://www.morimori-kaitori.jp/",process.env.MORIMORI_QUERY||"iPhone17",pages("MORIMORI_MAX_PAGES")));
+if(POLICIES.iosys.enabled&&process.env.ENABLE_IOSYS==="true"&&process.env.IOSYS_URL)collectors.push(new IosysCollector(process.env.IOSYS_URL.split(",").map(url=>url.trim()).filter(Boolean),pages("IOSYS_MAX_PAGES")));
+else if(process.env.INCLUDE_IOSYS_RESULT!=="false")collectors.push({name:"iosys",async collect(){throw new Error(`collector disabled by compliance policy: ${POLICIES.iosys.reason}`);}});
 if(!collectors.length){console.log(JSON.stringify({status:"skipped",reason:"no collectors enabled"}));process.exit(0);}
-const api=new ResearchApiClient(process.env.SPREA_INGEST_URL??"",process.env.SPREA_INGEST_TOKEN??"");const results=await runCollectors(collectors,(provider,items)=>api.send(provider,items));console.log(JSON.stringify({results}));
+const dryRun=process.env.SPREA_DRY_RUN==="true",api=dryRun?null:new ResearchApiClient(process.env.SPREA_INGEST_URL??"",process.env.SPREA_INGEST_TOKEN??"");const results=await runCollectors(collectors,(provider,items)=>api!.sendBatches(provider,items,Number.parseInt(process.env.SPREA_BATCH_SIZE??"100",10)),{dryRun});console.log(JSON.stringify({dryRun,summary:{providers:results.length,failedProviders:results.filter(result=>!result.ok).map(result=>result.name),fetched:results.reduce((sum,result)=>sum+result.fetched,0),valid:results.reduce((sum,result)=>sum+result.valid,0),invalid:results.reduce((sum,result)=>sum+result.invalid,0),sent:results.reduce((sum,result)=>sum+result.sent,0),warnings:results.flatMap(result=>result.warnings.map(warning=>`${result.name}: ${warning}`))}}));

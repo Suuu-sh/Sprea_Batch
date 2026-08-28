@@ -27,3 +27,9 @@ tests/fixtures/
 ```
 
 Collectors are disabled until their URL and enable flag are explicitly configured. The Iosys skeleton remains disabled under the current compliance decision.
+
+## Dry run and delivery
+
+Set `SPREA_DRY_RUN=true` to fetch, parse, normalize, and print provider counts and samples without calling Sprea. Payloads are sent in batches of at most 100 only when dry run is disabled. Manual GitHub Actions runs expose a dry-run checkbox; scheduled runs remain dry unless the repository variable `SPREA_DRY_RUN` is explicitly set to `false` after review.
+
+買取1丁目 uses the public JSON endpoint used by its SPA, with bounded pagination. 森森買取 parses the current `table.price-list` search result structure. Iosys has a completed fixture parser and registered collector class, but live execution and production delivery remain blocked by the documented terms and current AWS WAF challenge. The implementation does not bypass access controls.

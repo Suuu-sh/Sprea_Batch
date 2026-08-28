@@ -1,0 +1,11 @@
+import type {RawBuybackItem} from "../types.js";
+import {compact,positiveYen} from "./parser.js";
+
+const conditionFrom=(value:unknown):RawBuybackItem["condition"]=>{const text=String(value??"").normalize("NFKC").trim();if(text==="new"||/新品未開封|未開封|新品/.test(text))return"new";if(text==="unused"||/未使用|使用していない/.test(text))return"unused";if(text==="used"||/中古|ランク\s*[ABC]|使用感/.test(text))return"used";return"unknown";};
+const statusFrom=(value:unknown):RawBuybackItem["buybackStatus"]=>{const text=String(value??"").normalize("NFKC");if(text==="accepting"||/受付中|買取可|カートに入れる/.test(text))return"accepting";if(text==="paused"||/停止|休止/.test(text))return"paused";if(text==="unavailable"||/不可|在庫切れ|0円/.test(text))return"unavailable";return"unknown";};
+const janFrom=(value:unknown):string|undefined=>{const digits=String(value??"").replace(/\D/g,"");return /^\d{8,14}$/.test(digits)?digits:undefined;};
+const optional=(value:unknown):string|undefined=>{if(typeof value!=="string")return undefined;const text=compact(value);return text||undefined;};
+
+export function normalizeRawBuybackItem(value:unknown):RawBuybackItem|null{if(!value||typeof value!=="object")return null;const item=value as Record<string,unknown>,productName=optional(item.productName),price=typeof item.price==="number"?item.price:positiveYen(String(item.price??"")),fetchedAt=typeof item.fetchedAt==="string"&&!Number.isNaN(Date.parse(item.fetchedAt))?new Date(item.fetchedAt).toISOString():null;if(!productName||!Number.isSafeInteger(price)||Number(price)<=0||!fetchedAt)return null;let productUrl=optional(item.productUrl);if(productUrl)try{productUrl=new URL(productUrl).toString();}catch{productUrl=undefined;}return{externalId:optional(item.externalId),productName,jan:janFrom(item.jan),modelNumber:optional(item.modelNumber),brand:optional(item.brand),category:optional(item.category),condition:conditionFrom(item.condition),price:Number(price),buybackStatus:statusFrom(item.buybackStatus),productUrl,fetchedAt};}
+export function normalizeRawBuybackItems(items:unknown[]):RawBuybackItem[]{return items.map(normalizeRawBuybackItem).filter((item):item is RawBuybackItem=>item!==null);}
+export {conditionFrom as normalizeCondition,janFrom as normalizeJan,statusFrom as normalizeBuybackStatus};
