@@ -1,16 +1,29 @@
 # sprea-collectors
 
-Compliance-first external buyback-source adapters for Sprea. This public repository contains only neutral collector/ingest boundaries; it does not contain Sprea matching, opportunity, paper-trading, model, credentials, or private data.
+Compliance-first external buyback-source adapters for Sprea, built with TypeScript and Node.js 22. This public repository contains only HTTP acquisition, minimal parsing, and neutral Research API delivery. It does not contain Sprea matching, opportunities, paper trading, scores, D1 access, models, credentials, or private data.
 
 買取1丁目と森森買取は、明示的な禁止が確認できない範囲で個人研究用に有効化しています。イオシスは公開規約に禁止条項があるため無効です。判断根拠と再確認日は [docs/compliance.md](docs/compliance.md) を参照してください。
 
 ```bash
 npm ci
+npm run typecheck
+npm run lint
 npm test
 npm run build
 cp .env.example .env
 npm run collect
 ```
 
-The scheduled workflow runs every six hours. It first obtains fresh in-stock JAN targets from Sprea's authenticated ingest API, then queries each enabled buyback site at a bounded rate. Each collector is isolated: one failure is recorded without stopping the others. Only successful, non-empty results are sent through the neutral ingest client.
-Compliance-first external collector adapters for Sprea
+The scheduled workflow runs every two hours and can also be started manually. Each enabled collector is isolated: one failure is recorded without stopping the others. Tests use saved HTML fixtures and never require live sites. Only successful, non-empty results are sent to `POST /api/ingest/buyback-quotes`.
+
+## Layout
+
+```text
+src/collectors/{kaitori-1chome,morimori,iosys}/
+src/shared/
+src/runner.ts
+tests/fixtures/
+.github/workflows/collect.yml
+```
+
+Collectors are disabled until their URL and enable flag are explicitly configured. The Iosys skeleton remains disabled under the current compliance decision.

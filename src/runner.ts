@@ -1,0 +1,3 @@
+import type {BuybackCollector,CollectorRunResult,RawBuybackItem} from "./types.js";
+
+export async function runCollectors(collectors:BuybackCollector[],send:(provider:string,items:RawBuybackItem[])=>Promise<void>,log:(message:string)=>void=console.log):Promise<CollectorRunResult[]>{const results:CollectorRunResult[]=[];for(const collector of collectors){try{const items=await collector.collect();if(items.length)await send(collector.name,items);results.push({name:collector.name,ok:true,itemCount:items.length});}catch(error){const message=error instanceof Error?error.message:"unknown collector error";log(JSON.stringify({collector:collector.name,status:"failed",error:message}));results.push({name:collector.name,ok:false,itemCount:0,error:message});}}return results;}

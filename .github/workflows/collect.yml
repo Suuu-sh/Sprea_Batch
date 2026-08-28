@@ -1,6 +1,6 @@
-name: Compliance-safe collection
+name: Public buyback collection
 on:
-  schedule: [{cron: "23 */6 * * *"}]
+  schedule: [{cron: "23 */2 * * *"}]
   workflow_dispatch:
 permissions: {contents: read}
 concurrency: {group: collectors, cancel-in-progress: false}
@@ -13,6 +13,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: 22, cache: npm}
       - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
       - run: npm test
       - run: npm run build
       - name: Run independently isolated collectors
@@ -20,3 +22,8 @@ jobs:
         env:
           SPREA_INGEST_URL: ${{ secrets.SPREA_INGEST_URL }}
           SPREA_INGEST_TOKEN: ${{ secrets.SPREA_INGEST_TOKEN }}
+          ENABLE_KAITORI_1CHOME: ${{ vars.ENABLE_KAITORI_1CHOME }}
+          KAITORI_1CHOME_URL: ${{ vars.KAITORI_1CHOME_URL }}
+          ENABLE_MORIMORI: ${{ vars.ENABLE_MORIMORI }}
+          MORIMORI_URL: ${{ vars.MORIMORI_URL }}
+          ENABLE_IOSYS: "false"
