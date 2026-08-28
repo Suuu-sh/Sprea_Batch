@@ -1,0 +1,2 @@
+import{expect,it,vi}from"vitest";import{ingest}from"../src/ingest.js";
+it("authenticates the neutral ingest payload",async()=>{const fetcher=vi.fn(async()=>new Response(null,{status:202}));await ingest("https://example.test/ingest","token","fixture",[],fetcher);expect(fetcher).toHaveBeenCalledWith("https://example.test/ingest",expect.objectContaining({method:"POST",headers:expect.objectContaining({authorization:"Bearer token"})}));});
