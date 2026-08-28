@@ -1,7 +1,13 @@
-name: Compliance-safe collection
+name: Public buyback collection
 on:
-  schedule: [{cron: "23 */6 * * *"}]
+  schedule: [{cron: "23 */2 * * *"}]
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Parse and validate without sending to Sprea
+        required: true
+        default: true
+        type: boolean
 permissions: {contents: read}
 concurrency: {group: collectors, cancel-in-progress: false}
 jobs:
@@ -13,6 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: 22, cache: npm}
       - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
       - run: npm test
       - run: npm run build
       - name: Run independently isolated collectors
@@ -20,3 +28,17 @@ jobs:
         env:
           SPREA_INGEST_URL: ${{ secrets.SPREA_INGEST_URL }}
           SPREA_INGEST_TOKEN: ${{ secrets.SPREA_INGEST_TOKEN }}
+          # Scheduled runs stay dry until SPREA_DRY_RUN is explicitly set to "false".
+          SPREA_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || vars.SPREA_DRY_RUN != 'false' }}
+          SPREA_BATCH_SIZE: "100"
+          ENABLE_KAITORI_1CHOME: ${{ vars.ENABLE_KAITORI_1CHOME }}
+          KAITORI_1CHOME_URL: ${{ vars.KAITORI_1CHOME_URL }}
+          KAITORI_1CHOME_QUERY: ${{ vars.KAITORI_1CHOME_QUERY }}
+          KAITORI_1CHOME_MAX_PAGES: ${{ vars.KAITORI_1CHOME_MAX_PAGES }}
+          ENABLE_MORIMORI: ${{ vars.ENABLE_MORIMORI }}
+          MORIMORI_URL: ${{ vars.MORIMORI_URL }}
+          MORIMORI_QUERY: ${{ vars.MORIMORI_QUERY }}
+          MORIMORI_MAX_PAGES: ${{ vars.MORIMORI_MAX_PAGES }}
+          ENABLE_KAITORI_SHOUTEN: ${{ vars.ENABLE_KAITORI_SHOUTEN }}
+          KAITORI_SHOUTEN_URL: ${{ vars.KAITORI_SHOUTEN_URL }}
+          KAITORI_SHOUTEN_MAX_PAGES: ${{ vars.KAITORI_SHOUTEN_MAX_PAGES }}

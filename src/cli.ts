@@ -1,16 +1,8 @@
-import {DisabledCollector} from "./disabled-collector.js";
-import {ingest} from "./ingest.js";
-import {POLICIES} from "./policy.js";
-import {runAll} from "./run.js";
-import {fetchTargets} from "./targets.js";
-import {Kaitori1ChomeCollector} from "./collectors/kaitori-1chome.js";
-import {MorimoriCollector} from "./collectors/morimori.js";
-
-const ingestUrl=process.env.SPREA_INGEST_URL??"",token=process.env.SPREA_INGEST_TOKEN??"";
-if(process.env.ENABLE_IOSYS==="true")throw new Error("iosys cannot be enabled: compliance policy is disabled");
-const targets=await fetchTargets(ingestUrl,token);
-const collectors=[new Kaitori1ChomeCollector(targets),new MorimoriCollector(targets),new DisabledCollector(POLICIES.iosys)];
-const results=await runAll(collectors,new Date(),async(site,rows)=>{if(rows.length)await ingest(process.env.SPREA_INGEST_URL??"",process.env.SPREA_INGEST_TOKEN??"",site,rows);});
-console.log(JSON.stringify({results}));
-// Disabled sites are expected and do not prevent independent sites from running.
-// A future enabled collector failure is surfaced in output while other collectors continue.
+import {Kaitori1ChomeCollector,KaitoriShoutenCollector,MorimoriCollector} from "./collectors/index.js";import type {BuybackCollector} from "./types.js";import {ResearchApiClient} from "./shared/research-api-client.js";import {runCollectors} from "./runner.js";
+const collectors:BuybackCollector[]=[];
+const pages=(name:string)=>Math.max(1,Math.min(10,Number.parseInt(process.env[name]??"1",10)||1));
+if(process.env.ENABLE_KAITORI_1CHOME==="true")collectors.push(new Kaitori1ChomeCollector(process.env.KAITORI_1CHOME_URL||"https://www.1-chome.com/",process.env.KAITORI_1CHOME_QUERY||"iPhone",pages("KAITORI_1CHOME_MAX_PAGES")));
+if(process.env.ENABLE_MORIMORI==="true")collectors.push(new MorimoriCollector(process.env.MORIMORI_URL||"https://www.morimori-kaitori.jp/",process.env.MORIMORI_QUERY||"iPhone17",pages("MORIMORI_MAX_PAGES")));
+if(process.env.ENABLE_KAITORI_SHOUTEN==="true")collectors.push(new KaitoriShoutenCollector(process.env.KAITORI_SHOUTEN_URL||"https://www.kaitorishouten-co.jp/",pages("KAITORI_SHOUTEN_MAX_PAGES")));
+if(!collectors.length){console.log(JSON.stringify({status:"skipped",reason:"no collectors enabled"}));process.exit(0);}
+const dryRun=process.env.SPREA_DRY_RUN==="true",api=dryRun?null:new ResearchApiClient(process.env.SPREA_INGEST_URL??"",process.env.SPREA_INGEST_TOKEN??"");const results=await runCollectors(collectors,(provider,items)=>api!.sendBatches(provider,items,Number.parseInt(process.env.SPREA_BATCH_SIZE??"100",10)),{dryRun});console.log(JSON.stringify({dryRun,summary:{providers:results.length,failedProviders:results.filter(result=>!result.ok).map(result=>result.name),fetched:results.reduce((sum,result)=>sum+result.fetched,0),valid:results.reduce((sum,result)=>sum+result.valid,0),invalid:results.reduce((sum,result)=>sum+result.invalid,0),sent:results.reduce((sum,result)=>sum+result.sent,0),warnings:results.flatMap(result=>result.warnings.map(warning=>`${result.name}: ${warning}`))}}));
