@@ -39,5 +39,6 @@ jobs:
           MORIMORI_URL: ${{ vars.MORIMORI_URL }}
           MORIMORI_QUERY: ${{ vars.MORIMORI_QUERY }}
           MORIMORI_MAX_PAGES: ${{ vars.MORIMORI_MAX_PAGES }}
-          ENABLE_IOSYS: "false"
-          INCLUDE_IOSYS_RESULT: "false"
+          ENABLE_KAITORI_SHOUTEN: ${{ vars.ENABLE_KAITORI_SHOUTEN }}
+          KAITORI_SHOUTEN_URL: ${{ vars.KAITORI_SHOUTEN_URL }}
+          KAITORI_SHOUTEN_MAX_PAGES: ${{ vars.KAITORI_SHOUTEN_MAX_PAGES }}

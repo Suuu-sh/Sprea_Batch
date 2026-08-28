@@ -17,4 +17,4 @@ export interface BuybackCollector {
   collect(): Promise<RawBuybackItem[]>;
 }
 
-export type CollectorRunResult = {name:string; ok:boolean; fetched:number; valid:number; invalid:number; sent:number; warnings:string[]; error?:string};
+export type CollectorRunResult = {name:string; ok:boolean; fetched:number; valid:number; invalid:number; sent:number; janCount:number; modelNumberCount:number; positivePriceCount:number; acceptingCount:number; warnings:string[]; error?:string};
