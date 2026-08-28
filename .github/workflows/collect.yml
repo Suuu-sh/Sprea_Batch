@@ -40,3 +40,4 @@ jobs:
           MORIMORI_QUERY: ${{ vars.MORIMORI_QUERY }}
           MORIMORI_MAX_PAGES: ${{ vars.MORIMORI_MAX_PAGES }}
           ENABLE_IOSYS: "false"
+          INCLUDE_IOSYS_RESULT: "false"
