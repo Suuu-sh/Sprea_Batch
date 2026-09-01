@@ -33,3 +33,9 @@ Collectors are disabled until their enable flag is explicitly configured. The Io
 Set `SPREA_DRY_RUN=true` to fetch, parse, normalize, and print provider counts and samples without calling Sprea. Payloads are sent in batches of at most 100 only when dry run is disabled. Manual GitHub Actions runs expose a dry-run checkbox; scheduled runs remain dry unless the repository variable `SPREA_DRY_RUN` is explicitly set to `false` after review.
 
 買取1丁目 uses the public JSON endpoint used by its SPA, with bounded pagination. 森森買取 parses the current `table.price-list` search result structure. 買取商店 parses the public mobile-product list and uses the displayed new-item price without guessing unavailable model numbers. Iosys retains fixture/parser code only and is not registered for live execution. The implementation does not bypass authentication or access controls.
+
+## Production schedule
+
+The public provider sites currently time out from GitHub-hosted runner IP ranges. The production collector therefore runs on the owner Mac with a LaunchAgent at 03:00, 09:00, 15:00, and 21:00 JST. GitHub Actions remains available for manual diagnostics, type checking, tests, and builds.
+
+Runtime credentials are stored outside the repository at `/Users/yota/Projects/Secrets/Sprea/collector.env`. The scheduled entry point is `scripts/run-production-collector.sh`.

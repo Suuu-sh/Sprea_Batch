@@ -1,6 +1,5 @@
 name: Public buyback collection
 on:
-  schedule: [{cron: "23 */2 * * *"}]
   workflow_dispatch:
     inputs:
       dry_run:
@@ -13,7 +12,7 @@ concurrency: {group: collectors, cancel-in-progress: false}
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,7 +29,7 @@ jobs:
           SPREA_INGEST_TOKEN: ${{ secrets.SPREA_INGEST_TOKEN }}
           # Scheduled runs stay dry until SPREA_DRY_RUN is explicitly set to "false".
           SPREA_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || github.event_name != 'workflow_dispatch' && vars.SPREA_DRY_RUN != 'false' }}
-          SPREA_BATCH_SIZE: "100"
+          SPREA_BATCH_SIZE: "10"
           ENABLE_KAITORI_1CHOME: ${{ vars.ENABLE_KAITORI_1CHOME }}
           KAITORI_1CHOME_URL: ${{ vars.KAITORI_1CHOME_URL }}
           KAITORI_1CHOME_QUERY: ${{ vars.KAITORI_1CHOME_QUERY }}
