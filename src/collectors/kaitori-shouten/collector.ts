@@ -5,7 +5,7 @@ import {kaitoriShoutenLastPage,parseKaitoriShouten} from "./parser.js";
 const USER_AGENT="Mozilla/5.0 (compatible; SpreaResearchBot/1.0; +https://github.com/Suuu-sh/sprea-collectors)";
 export class KaitoriShoutenCollector implements BuybackCollector{
  readonly name="kaitori_shouten";
- constructor(private readonly baseUrl="https://www.kaitorishouten-co.jp/",private readonly maxPages=1,private readonly http=new HttpClient({timeoutMs:20_000,maxRetries:2,userAgent:USER_AGENT})){}
+ constructor(private readonly baseUrl="https://www.kaitorishouten-co.jp/",private readonly maxPages=1,private readonly http=new HttpClient({timeoutMs:45_000,maxRetries:2,userAgent:USER_AGENT})){}
  async collect():Promise<RawBuybackItem[]>{
   const fetchedAt=new Date().toISOString(),firstUrl=new URL("/keitai",this.baseUrl),first=await this.http.request(firstUrl,{headers:{accept:"text/html,application/xhtml+xml"}});
   if(!first.ok)throw new Error(`kaitori shouten fetch failed (${first.status})`);

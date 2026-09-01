@@ -1,6 +1,6 @@
 name: Public buyback collection
 on:
-  schedule: [{cron: "23 */2 * * *"}]
+  schedule: [{cron: "0 0,6,12,18 * * *"}]
   workflow_dispatch:
     inputs:
       dry_run:
@@ -13,7 +13,7 @@ concurrency: {group: collectors, cancel-in-progress: false}
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
